@@ -1,0 +1,66 @@
+<div class="container">
+  <header>
+    <h1>Ant Colony Optimization for Traveling Salesman Problem</h1>
+  </header>
+
+  <div class="content">
+    <aside class="control-panel">
+      <app-algorithm-control
+        [status]="status()"
+        [initialized]="nodes().length > 2"
+        (startClicked)="onStart()"
+        (stopClicked)="onStop()"
+      >
+      </app-algorithm-control>
+
+      <app-graph-params
+        [params]="graphParams()"
+        [disabled]="status() === statuses.Running"
+        (paramsReset)="onGraphParamsReset()"
+        (paramsChange)="onGraphParamsChange($event)"
+      >
+      </app-graph-params>
+
+      <app-algorithm-params
+        [params]="algorithmParams()"
+        [disabled]="status() === statuses.Running"
+        (paramsReset)="onAlgorithmParamsReset()"
+        (paramsChange)="onAlgorithmParamsChange($event)"
+      >
+      </app-algorithm-params>
+
+      <app-algorithm-result-info
+        [iteration]="iteration()?.iteration ?? null"
+        [iterations]="iterations()"
+        [convergenceIteration]="convergenceIteration()"
+      >
+      </app-algorithm-result-info>
+    </aside>
+
+    <main class="visualization">
+      @if (nodes().length > 0) {
+        <section class="viz-section">
+          <mat-tab-group>
+            <mat-tab label="Cities Graph">
+              <div class="tab-content">
+                <app-graph-visualization [graph]="graph()" [iteration]="iteration()">
+                </app-graph-visualization>
+              </div>
+            </mat-tab>
+
+            <mat-tab label="Cities and Distances Info">
+              <div class="tab-content">
+                <app-graph-nodes-info [graph]="graph()"></app-graph-nodes-info>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </section>
+      }
+
+      <app-algorithm-results-table
+        [iterations]="iterations()"
+        [convergenceIteration]="convergenceIteration()"
+      ></app-algorithm-results-table>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+@if (params()) {
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      <strong>Graph Generation</strong>
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <div class="form-group">
+    <label for="cityCount">Number of Cities:</label>
+    <input
+      type="number"
+      id="cityCount"
+      min="2"
+      [disabled]="disabled()"
+      [ngModel]="params()!.count"
+      (ngModelChange)="onParamValueChange('count', $event)"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="maxEdgesPerCity">Max Edges per City:</label>
+    <input
+      type="number"
+      id="maxEdgesPerCity"
+      placeholder="Leave empty for complete graph"
+      min="1"
+      [max]="params()!.count - 1"
+      [disabled]="disabled()"
+      [ngModel]="params()!.maxEdgesPerNode"
+      (ngModelChange)="onParamValueChange('maxEdgesPerNode', $event)"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="minDistance">Minimum Distance:</label>
+    <input
+      type="number"
+      id="minDistance"
+      placeholder="Leave empty for no minimum"
+      min="0"
+      [disabled]="disabled()"
+      [ngModel]="params()!.minDistance"
+      (ngModelChange)="onParamValueChange('minDistance', $event)"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="maxDistance">Maximum Distance:</label>
+    <input
+      type="number"
+      id="maxDistance"
+      placeholder="Leave empty for no maximum"
+      min="0"
+      [disabled]="disabled()"
+      [ngModel]="params()!.maxDistance"
+      (ngModelChange)="onParamValueChange('maxDistance', $event)"
+    />
+  </div>
+
+  <button
+    type="button"
+    class="btn btn-danger btn-small"
+    [disabled]="disabled()"
+    (click)="paramsReset.emit()"
+  >
+    Reset to Default
+  </button>
+</mat-expansion-panel>
+}

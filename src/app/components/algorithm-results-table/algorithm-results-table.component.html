@@ -1,0 +1,37 @@
+@if (hasIterations()) {
+<section class="viz-section">
+  <h2>All Iterations Results</h2>
+  <div class="table-container">
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Iteration</th>
+          <th>Best Length</th>
+          <th>Average Length</th>
+          <th>Improvement</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (iter of iterations(); track iter.iteration; let i = $index) {
+        <tr [class.best-iteration]="convergenceIteration() === iter.iteration">
+          <td>{{ i + 1 }}</td>
+          <td>{{ iter.iteration }}</td>
+          <td>{{ iter.bestLength }}</td>
+          <td>{{ iter.averageLength.toFixed(2) || '—' }}</td>
+          <td>
+            @if (i > 0 && iter.bestLength < iterations()[i - 1].bestLength) {
+            <span class="improvement">
+              + {{ (iterations()[i - 1].bestLength - iter.bestLength).toFixed(2) }}
+            </span>
+            } @else {
+            <span>—</span>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+}

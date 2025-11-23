@@ -1,0 +1,19 @@
+<section class="control-section">
+  <h2>Control</h2>
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="status() === statuses.Running || !initialized()"
+    (click)="startClicked.emit()"
+  >
+    Start
+  </button>
+  <button
+    type="button"
+    class="btn btn-danger"
+    [disabled]="status() === statuses.Stopped"
+    (click)="stopClicked.emit()"
+  >
+    Stop
+  </button>
+</section>

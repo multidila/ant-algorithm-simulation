@@ -1,0 +1,41 @@
+<div class="cities-info">
+  <h3>City Coordinates</h3>
+  <div class="cities-grid">
+    @for (node of nodes(); track node.id) {
+      <div class="city-item">
+        <strong>City {{ node.id }}:</strong>
+        ({{ node.x.toFixed(0) || '?' }}, {{ node.y.toFixed(0) || '?' }})
+      </div>
+    }
+  </div>
+</div>
+
+@if (nodes().length > 0) {
+  <div class="distances-info">
+    <h3>Distances Between Cities</h3>
+    <div class="table-container">
+      <table class="distance-matrix">
+        <thead>
+          <tr>
+            <th></th>
+            @for (node of nodes(); track node.id) {
+              <th>{{ node.id }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (nodeFrom of nodes(); track nodeFrom.id; let i = $index) {
+            <tr>
+              <th>{{ nodeFrom.id }}</th>
+              @for (nodeTo of nodes(); track nodeTo.id; let j = $index) {
+                <td [class.diagonal]="i === j">
+                  {{ getDisplayDistance(i, j) }}
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

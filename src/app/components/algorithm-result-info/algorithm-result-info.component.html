@@ -1,0 +1,32 @@
+@if (currentIteration()) {
+  <section class="control-section info-section">
+    <h2>Current Information</h2>
+    <div class="info-item"><strong>Iteration:</strong> {{ currentIteration()?.iteration }}</div>
+    <div class="info-item"><strong>Best Length:</strong> {{ currentIteration()?.bestLength }}</div>
+    <div class="info-item">
+      <strong>Average Length:</strong> {{ currentIteration()?.averageLength?.toFixed(2) || '—' }}
+    </div>
+  </section>
+}
+
+@if (finalIteration()) {
+  <section class="control-section info-section">
+    <h2>Final Information</h2>
+    <div class="info-item">
+      <strong>Best Length:</strong> {{ finalIteration()?.bestLength }}
+    </div>
+    <div class="info-item">
+      <strong>Convergence Iteration:</strong> {{ convergenceIteration() ?? '—' }}
+    </div>
+    <div class="info-item"><strong>Total Iterations:</strong> {{ iterationCount() }}</div>
+  </section>
+}
+  @if (currentIteration()) {
+    <section class="viz-section">
+      <h2>Current Progress</h2>
+      <div class="progress-info">
+        <p><strong>Current Best Route:</strong></p>
+        <p class="route-text">{{ currentIteration()?.bestTour?.join(' → ') }}</p>
+      </div>
+    </section>
+  }

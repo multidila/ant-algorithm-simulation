@@ -1,0 +1,58 @@
+.viz-section {
+  margin-bottom: 30px;
+}
+
+h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #212529;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+
+  thead {
+    background-color: #f8f9fa;
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+
+      &.best-iteration {
+        background-color: #d4edda;
+        font-weight: 500;
+      }
+
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #dee2e6;
+      }
+    }
+  }
+}
+
+.improvement {
+  color: #28a745;
+  font-weight: 500;
+}
