@@ -53,6 +53,28 @@ h2 {
 }
 
 .improvement {
-  color: #28a745;
-  font-weight: 500;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+
+  &.positive {
+    color: #16a34a;
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+  }
+
+  &.negative {
+    color: #dc2626;
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+  }
+
+  &.neutral {
+    color: #6b7280;
+    background-color: transparent;
+    border: none;
+  }
 }

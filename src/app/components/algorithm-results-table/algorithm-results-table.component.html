@@ -20,12 +20,21 @@
           <td>{{ iter.bestLength }}</td>
           <td>{{ iter.averageLength.toFixed(2) || '—' }}</td>
           <td>
-            @if (i > 0 && iter.bestLength < iterations()[i - 1].bestLength) {
-            <span class="improvement">
-              + {{ (iterations()[i - 1].bestLength - iter.bestLength).toFixed(2) }}
-            </span>
+            @if (i > 0) {
+              @let diff = iterations()[i - 1].bestLength - iter.bestLength;
+              @if (diff > 0.001) {
+                <span class="improvement positive">
+                  ↓ {{ diff.toFixed(2) }}
+                </span>
+              } @else if (diff < -0.001) {
+                <span class="improvement negative">
+                  ↑ {{ (diff * -1).toFixed(2) }}
+                </span>
+              } @else {
+                <span class="improvement neutral">—</span>
+              }
             } @else {
-            <span>—</span>
+              <span class="improvement neutral">—</span>
             }
           </td>
         </tr>

@@ -16,7 +16,7 @@ const NETWORK_OPTIONS: Options = {
       highlight: { border: '#4c51bf', background: '#4c51bf' },
       hover: { border: '#4c51bf', background: '#667eea' },
     },
-    fixed: { x: true, y: true },
+    fixed: { x: false, y: false },
     chosen: { node: true, label: false },
   },
   edges: {
@@ -28,7 +28,7 @@ const NETWORK_OPTIONS: Options = {
   interaction: {
     hover: true,
     tooltipDelay: 200,
-    dragNodes: false,
+    dragNodes: true,
     dragView: true,
     zoomView: true,
   },
@@ -147,6 +147,14 @@ export class GraphVisualizationComponent implements OnDestroy {
       }
     }
     this._edgesData.add(edgesData);
+
+    // Center and fit the graph in the viewport
+    this._network.fit({
+      animation: {
+        duration: 500,
+        easingFunction: 'easeInOutQuad',
+      },
+    });
   }
 
   private _getNodeData(node: Node, index: number, distances: number[]): GraphNodeData {
@@ -167,8 +175,8 @@ export class GraphVisualizationComponent implements OnDestroy {
       'Distances:',
     ];
     distances.forEach((value, distanceIndex) => {
-      if (index !== distanceIndex) {
-        lines.push(`  to city ${distanceIndex}: ${value}`);
+      if (index !== distanceIndex && value !== Infinity) {
+        lines.push(`  to city ${distanceIndex}: ${value.toFixed(2)}`);
       }
     });
     return lines.join('\n');
@@ -182,7 +190,7 @@ export class GraphVisualizationComponent implements OnDestroy {
       width: 0.5,
       color: { color: '#999999' },
       dashes: true,
-      title: `Distance: ${distance}`,
+      title: `Distance: ${distance.toFixed(2)}`,
     };
   }
 

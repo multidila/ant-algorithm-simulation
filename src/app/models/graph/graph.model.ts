@@ -1,9 +1,10 @@
 import { GraphParams } from './graph-params.model';
 import { Node } from './node.model';
+import { RandomService } from '../../services/random';
 
 /**
  * Graph class that manages nodes, distances, and pheromones
- * Supports k-regular graph generation (limited edges per node)
+ * Supports k-regular graph generation (each node has approximately k edges)
  */
 export class Graph {
   public readonly nodes: Node[];
@@ -13,8 +14,12 @@ export class Graph {
   /**
    * Creates a new graph
    * @param params Graph generation parameters including initialPheromone
+   * @param randomService Random number generator service
    */
-  constructor(params: GraphParams & { initialPheromone: number }) {
+  constructor(
+    params: GraphParams & { initialPheromone: number },
+    private readonly _randomService: RandomService
+  ) {
     this.nodes = this._generateNodes(params);
     this.distances = this._buildDistanceMatrix(params);
     this.pheromones = this._createMatrix(params.initialPheromone);
@@ -35,8 +40,8 @@ export class Graph {
     for (let i = 0; i < count; i++) {
       nodes.push({
         id: i,
-        x: Math.random() * coordinateRange,
-        y: Math.random() * coordinateRange,
+        x: this._randomService.next() * coordinateRange,
+        y: this._randomService.next() * coordinateRange,
       });
     }
 
@@ -50,141 +55,181 @@ export class Graph {
   }
 
   private _buildDistanceMatrix(params: GraphParams): number[][] {
-    const distances = this._calculateDistances(params);
-    if (params.maxEdgesPerNode != null && params.maxEdgesPerNode > 0) {
-      this._applyKRegularConstraint(distances, params.maxEdgesPerNode);
+    const distances = this._createMatrix(0);
+
+    if (params.edgesPerNode != null && params.edgesPerNode >= 2) {
+      // Build k-regular graph structure with random or euclidean weights
+      this._buildKRegularGraph(distances, params);
+    } else {
+      // Complete graph with euclidean distances
+      this._buildCompleteGraph(distances, params);
     }
     return distances;
   }
 
-  private _calculateDistances(params: GraphParams): number[][] {
+  /**
+   * Builds a complete graph with all possible edges
+   * Edge weights are euclidean distances between nodes
+   */
+  private _buildCompleteGraph(distances: number[][], params: GraphParams): void {
     const n = this.nodes.length;
-    const distances = this._createMatrix(0);
-    const { minDistance, maxDistance } = params;
 
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (i === j) {
           distances[i][j] = 0;
         } else {
-          const distance = this._euclideanDistance(this.nodes[i], this.nodes[j]);
+          distances[i][j] = this._euclideanDistance(this.nodes[i], this.nodes[j]);
+        }
+      }
+    }
+  }
 
-          // Apply min/max distance constraints
-          if (minDistance != null && distance < minDistance) {
-            distances[i][j] = Infinity;
-          } else if (maxDistance != null && distance > maxDistance) {
-            distances[i][j] = Infinity;
-          } else {
-            distances[i][j] = distance;
+  /**
+   * Builds a k-regular graph where each node has approximately k edges
+   * Uses ring + chords structure for guaranteed connectivity
+   * Edge weights are random (if min/max specified) or euclidean
+   */
+  private _buildKRegularGraph(distances: number[][], params: GraphParams): void {
+    const n = this.nodes.length;
+    const k = params.edgesPerNode ?? 2;
+
+    // Initialize all distances to Infinity
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        distances[i][j] = i === j ? 0 : Infinity;
+      }
+    }
+
+    // Build edge structure using ring + chords approach
+    const edges = this._generateKRegularStructure(n, k);
+
+    // Assign weights to edges
+    const useRandomWeights = params.minDistance != null || params.maxDistance != null;
+    const minDist = params.minDistance ?? 10;
+    const maxDist = params.maxDistance ?? 100;
+
+    for (const [i, j] of edges) {
+      let weight: number;
+
+      if (useRandomWeights) {
+        // Generate random weight in range [minDistance, maxDistance]
+        weight = minDist + this._randomService.next() * (maxDist - minDist);
+      } else {
+        // Use euclidean distance
+        weight = this._euclideanDistance(this.nodes[i], this.nodes[j]);
+      }
+
+      distances[i][j] = weight;
+      distances[j][i] = weight;
+    }
+  }
+
+  /**
+   * Generates k-regular graph structure with guaranteed Hamiltonian cycle
+   * 1. Creates Hamiltonian cycle (0→1→2→...→n-1→0) ensuring TSP solvability
+   * 2. Adds additional edges to reach k edges per node
+   * If n*k is odd, one node will have k+1 edges
+   */
+  private _generateKRegularStructure(n: number, k: number): Array<[number, number]> {
+    const edges: Array<[number, number]> = [];
+    const degree = new Array(n).fill(0);
+
+    // Step 1: Create Hamiltonian cycle (guarantees TSP solution exists)
+    // This creates edges: 0→1, 1→2, 2→3, ..., (n-1)→0
+    for (let i = 0; i < n; i++) {
+      const next = (i + 1) % n;
+      edges.push([i, next]);
+      degree[i]++;
+      degree[next]++;
+    }
+
+    // Step 2: Add chord edges symmetrically to approach k edges per node
+    // Use offset pattern to maintain balance
+    for (let offset = 2; offset <= Math.floor(k / 2); offset++) {
+      for (let i = 0; i < n; i++) {
+        const j = (i + offset) % n;
+
+        // Only add if both nodes haven't reached k edges yet
+        if (degree[i] < k && degree[j] < k) {
+          // Check if edge already exists
+          const edgeExists = edges.some(
+            ([a, b]) => (a === i && b === j) || (a === j && b === i)
+          );
+
+          if (!edgeExists) {
+            edges.push([i, j]);
+            degree[i]++;
+            degree[j]++;
           }
         }
       }
     }
-    return distances;
-  }
 
-  /**
-   * Applies k-regular constraint by first building MST for connectivity, then adding nearest neighbors
-   * This ensures the graph is always connected without "breaking and fixing"
-   */
-  private _applyKRegularConstraint(distances: number[][], k: number): void {
-    // Step 1: Build Minimum Spanning Tree (MST) to ensure connectivity
-    const mstEdges = this._buildMST(distances);
+    // Step 3: Handle odd k by adding diameter edges (for even n)
+    if (k % 2 === 1 && n % 2 === 0) {
+      for (let i = 0; i < n / 2; i++) {
+        if (degree[i] >= k) {
+          continue;
+        }
 
-    // Step 2: Start with infinity for all edges
-    for (let i = 0; i < this.nodes.length; i++) {
-      for (let j = 0; j < this.nodes.length; j++) {
-        if (i !== j) {
-          distances[i][j] = Infinity;
+        const j = i + Math.floor(n / 2);
+        if (degree[j] < k) {
+          const edgeExists = edges.some(
+            ([a, b]) => (a === i && b === j) || (a === j && b === i)
+          );
+
+          if (!edgeExists) {
+            edges.push([i, j]);
+            degree[i]++;
+            degree[j]++;
+          }
         }
       }
     }
 
-    // Step 3: Add MST edges back (guaranteed connectivity)
-    for (const [from, to, distance] of mstEdges) {
-      distances[from][to] = distance;
-      distances[to][from] = distance;
-    }
-
-    // Step 4: For each node, add k nearest neighbors (including MST edges)
-    for (let i = 0; i < this.nodes.length; i++) {
-      // Get all possible edges with their distances
-      const edges: Array<{ node: number; distance: number }> = [];
-      for (let j = 0; j < this.nodes.length; j++) {
-        if (j !== i) {
-          edges.push({
-            node: j,
-            distance: this._euclideanDistance(this.nodes[i], this.nodes[j]),
-          });
+    // Step 4: Fill remaining deficits to reach k edges per node
+    // Try to connect nodes with lowest degrees first
+    for (let targetDegree = Math.min(...degree); targetDegree < k; targetDegree++) {
+      for (let i = 0; i < n; i++) {
+        if (degree[i] >= k) {
+          continue;
         }
-      }
 
-      // Sort by distance to get nearest neighbors
-      edges.sort((a, b) => a.distance - b.distance);
+        // Find best candidate: node with lowest degree that we're not connected to
+        let bestCandidate = -1;
+        let minCandidateDegree = k + 1;
 
-      // Keep k nearest neighbors
-      const keepNodes = edges.slice(0, k);
+        for (let j = 0; j < n; j++) {
+          if (i === j || degree[j] >= k) {
+            continue;
+          }
 
-      for (const edge of keepNodes) {
-        distances[i][edge.node] = edge.distance;
-        distances[edge.node][i] = edge.distance;
-      }
-    }
-  }
+          const edgeExists = edges.some(
+            ([a, b]) => (a === i && b === j) || (a === j && b === i)
+          );
 
-  /**
-   * Builds Minimum Spanning Tree using Prim's algorithm
-   * Returns array of edges: [from, to, distance]
-   */
-  private _buildMST(distances: number[][]): Array<[number, number, number]> {
-    const n = this.nodes.length;
-    const mstEdges: Array<[number, number, number]> = [];
-    const visited = new Array(n).fill(false);
-    const minDistance = new Array(n).fill(Infinity);
-    const parent = new Array(n).fill(-1);
-
-    // Start from node 0
-    minDistance[0] = 0;
-
-    for (let i = 0; i < n; i++) {
-      // Find unvisited node with minimum distance
-      let minDist = Infinity;
-      let minNode = -1;
-
-      for (let j = 0; j < n; j++) {
-        if (!visited[j] && minDistance[j] < minDist) {
-          minDist = minDistance[j];
-          minNode = j;
+          if (!edgeExists && degree[j] < minCandidateDegree) {
+            bestCandidate = j;
+            minCandidateDegree = degree[j];
+          }
         }
-      }
 
-      if (minNode === -1) {
-        break;
-      }
-
-      visited[minNode] = true;
-
-      // Add edge to MST (except for the first node)
-      if (parent[minNode] !== -1) {
-        mstEdges.push([parent[minNode], minNode, minDistance[minNode]]);
-      }
-
-      // Update distances to neighbors
-      for (let j = 0; j < n; j++) {
-        if (!visited[j] && distances[minNode][j] < minDistance[j]) {
-          minDistance[j] = distances[minNode][j];
-          parent[j] = minNode;
+        if (bestCandidate !== -1) {
+          edges.push([i, bestCandidate]);
+          degree[i]++;
+          degree[bestCandidate]++;
         }
       }
     }
 
-    return mstEdges;
+    return edges;
   }
 
   private _euclideanDistance(nodeA: Node, nodeB: Node): number {
     const dx = nodeA.x - nodeB.x;
     const dy = nodeA.y - nodeB.y;
-    return Math.sqrt(dx * dx + dy * dy);
+    return Math.hypot(dx, dy);
   }
 
   /**

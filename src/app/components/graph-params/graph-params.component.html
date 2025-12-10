@@ -19,16 +19,16 @@
   </div>
 
   <div class="form-group">
-    <label for="maxEdgesPerCity">Max Edges per City:</label>
+    <label for="edgesPerCity">Edges per City:</label>
     <input
       type="number"
-      id="maxEdgesPerCity"
+      id="edgesPerCity"
       placeholder="Leave empty for complete graph"
-      min="1"
+      min="2"
       [max]="params()!.count - 1"
       [disabled]="disabled()"
-      [ngModel]="params()!.maxEdgesPerNode"
-      (ngModelChange)="onParamValueChange('maxEdgesPerNode', $event)"
+      [ngModel]="params()!.edgesPerNode"
+      (ngModelChange)="onParamValueChange('edgesPerNode', $event)"
     />
   </div>
 
@@ -55,6 +55,18 @@
       [disabled]="disabled()"
       [ngModel]="params()!.maxDistance"
       (ngModelChange)="onParamValueChange('maxDistance', $event)"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="seed">Random Seed:</label>
+    <input
+      type="number"
+      id="seed"
+      placeholder="Leave empty for random"
+      [disabled]="disabled()"
+      [ngModel]="params()!.seed"
+      (ngModelChange)="onParamValueChange('seed', $event)"
     />
   </div>
 

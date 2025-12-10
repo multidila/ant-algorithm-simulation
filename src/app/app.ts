@@ -18,6 +18,7 @@ import { AlgorithmStatus } from './enums';
 import { AlgorithmIterationResult, AlgorithmParams } from './models/algorithm';
 import { Graph, GraphParams } from './models/graph';
 import { AntColonyOptimization } from './services/algorithm';
+import { RandomService } from './services/random';
 
 const DEFAULT_ALGORITHM_PARAMS: AlgorithmParams = {
   antCount: 10,
@@ -34,7 +35,7 @@ const DEFAULT_ALGORITHM_PARAMS: AlgorithmParams = {
 
 const DEFAULT_GRAPH_PARAMS: GraphParams = {
   count: 10,
-  maxEdgesPerNode: undefined,
+  edgesPerNode: undefined,
   minDistance: undefined,
   maxDistance: undefined,
 };
@@ -61,6 +62,7 @@ const DEFAULT_GRAPH_PARAMS: GraphParams = {
 export class AppComponent implements OnInit, OnDestroy {
   private readonly _destroy$ = new Subject<void>();
   private readonly _algorithm = inject(AntColonyOptimization);
+  private readonly _randomService = inject(RandomService);
   private _algorithmLoopSub?: Subscription;
   private _algorithmIterator?: Generator<AlgorithmIterationResult, void>;
 
@@ -81,11 +83,21 @@ export class AppComponent implements OnInit, OnDestroy {
   private _initializeGraph(): void {
     const graphParamsValue = this.graphParams();
     const algorithmParamsValue = this.algorithmParams();
+
+    if (graphParamsValue.seed === undefined) {
+      this._randomService.clearSeed();
+    } else {
+      this._randomService.setSeed(graphParamsValue.seed);
+    }
+
     this.graph.set(
-      new Graph({
-        ...graphParamsValue,
-        initialPheromone: algorithmParamsValue.initialPheromone,
-      })
+      new Graph(
+        {
+          ...graphParamsValue,
+          initialPheromone: algorithmParamsValue.initialPheromone,
+        },
+        this._randomService
+      )
     );
     this.iterations.set([]);
     this.iteration.set(null);

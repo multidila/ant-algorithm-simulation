@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { AlgorithmStatus } from '../../enums';
 import { Agent, AlgorithmIterationResult, AlgorithmParams } from '../../models/algorithm';
 import { Graph } from '../../models/graph';
+import { RandomService } from '../random';
 
 @Injectable()
 export class AntColonyOptimization {
@@ -11,9 +12,10 @@ export class AntColonyOptimization {
 
   private _graph!: Graph;
   private _params!: AlgorithmParams;
-
   private _agents: Agent[] = [];
   private _bestAgent: Agent | null = null;
+
+  constructor(private readonly _randomService: RandomService) {}
 
   private get _stopped(): boolean {
     return this._status$.value === AlgorithmStatus.Stopped;
@@ -28,6 +30,14 @@ export class AntColonyOptimization {
     this._params = params;
     this._agents = [];
     this._bestAgent = null;
+
+    // Reset pheromones to initial value
+    for (let i = 0; i < this._graph.nodes.length; i++) {
+      for (let j = 0; j < this._graph.nodes.length; j++) {
+        this._graph.updatePheromone(i, j, params.initialPheromone);
+      }
+    }
+
     for (let i = 0; i < this._params.antCount; i++) {
       const startPosition = i % this._graph.nodes.length;
       this._agents.push(new Agent(startPosition));
@@ -61,10 +71,10 @@ export class AntColonyOptimization {
       totalProbability += value;
     }
     if (totalProbability <= 0) {
-      const randomIndex = Math.floor(Math.random() * reachableNodes.length);
+      const randomIndex = Math.floor(this._randomService.next() * reachableNodes.length);
       return reachableNodes[randomIndex];
     }
-    const random = Math.random() * totalProbability;
+    const random = this._randomService.next() * totalProbability;
     let cumulativeProbability = 0;
     for (let i = 0; i < reachableNodes.length; i++) {
       cumulativeProbability += attractiveness[i];
@@ -91,7 +101,12 @@ export class AntColonyOptimization {
   private _updatePheromones(bestAgent: Agent | null): void {
     this._graph.evaporatePheromones(this._params.evaporationRate);
 
+    // Only update pheromones for agents with valid tours
     for (const agent of this._agents) {
+      if (agent.tourLength === Infinity) {
+        continue;
+      }
+
       const pheromoneDeposit = this._params.Q / agent.tourLength;
 
       for (let i = 0; i < agent.tour.length - 1; i++) {
@@ -154,8 +169,13 @@ export class AntColonyOptimization {
     if (!this._bestAgent || iterationBestAgent.tourLength < this._bestAgent.tourLength) {
       this._bestAgent = new Agent(iterationBestAgent);
     }
-    const totalLength = this._agents.reduce((sum, agent) => sum + agent.tourLength, 0);
-    const averageLength = totalLength / this._agents.length;
+
+    // Calculate average length excluding agents with Infinity tours
+    const validAgents = this._agents.filter(agent => agent.tourLength !== Infinity);
+    const averageLength = validAgents.length > 0
+      ? validAgents.reduce((sum, agent) => sum + agent.tourLength, 0) / validAgents.length
+      : Infinity;
+
     this._updatePheromones(this._bestAgent);
     return {
       iteration,

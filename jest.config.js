@@ -1,13 +1,21 @@
-const baseConfig = require('./jest.preset.js');
-
 module.exports = {
-	...baseConfig,
-	preset: 'jest-preset-angular',
-	setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
-	testEnvironment: 'jsdom',
-	testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/'],
-	coverageDirectory: '<rootDir>/coverage',
-	collectCoverage: true,
-	collectCoverageFrom: ['src/**/*.ts', '!src/**/*.spec.ts', '!src/**/*.mock.ts', '!src/**/index.ts'],
-	coverageReporters: ['html', 'text', 'lcov'],
+  preset: 'jest-preset-angular',
+  testEnvironment: 'jsdom',
+  testMatch: ['**/*.spec.ts'],
+  collectCoverage: false,
+  coverageDirectory: 'coverage',
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+  },
+  transform: {
+    '^.+\\.(ts|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.html$',
+      },
+    ],
+  },
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
+  moduleFileExtensions: ['ts', 'html', 'js', 'json', 'mjs'],
 };

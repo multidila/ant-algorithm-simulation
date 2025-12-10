@@ -1,6 +1,7 @@
 export interface GraphParams {
   count: number;
-  maxEdgesPerNode?: number;
+  edgesPerNode?: number;
   minDistance?: number;
   maxDistance?: number;
+  seed?: number;
 }

@@ -1,11 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 
 import { AppComponent } from './app';
+import { AntColonyOptimization } from './services/algorithm';
+import { RandomService } from './services/random';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [RandomService, AntColonyOptimization],
     }).compileComponents();
   });
 
