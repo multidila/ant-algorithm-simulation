@@ -1,8 +1,16 @@
 # ant-algorithm-simulation
 
-A simulation of the Ant Colony Optimization algorithm designed to solve optimization problems. The project showcases how ant-like agents form pheromone trails, cooperate, and search for the shortest paths. It also includes a visual representation.
+A simulation of the Ant Colony Optimization (ACO) algorithm designed to solve the Traveling Salesman Problem (TSP). The project showcases how ant-like agents form pheromone trails, cooperate, and search for the shortest paths. It includes an interactive visual representation of the algorithm in action.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
+
+## Features
+
+- **Interactive Visualization**: Real-time graph visualization showing pheromone trails and best tour
+- **Seeded Random Generation**: Reproducible scenarios using seed values for testing and demonstration
+- **Configurable Parameters**: Adjust algorithm parameters (α, β, ρ, Q, ant count, iterations)
+- **K-Regular Graph Generation**: Generate graphs with configurable node count and edge density
+- **Integration Tests**: Comprehensive test suite validating algorithm behavior across different scenarios
 
 ## Development server
 
@@ -38,23 +46,25 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
-## Running unit tests
+## Running tests
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+This project uses [Jest](https://jestjs.io/) for testing. To execute all tests, run:
 
 ```bash
-ng e2e
+npm test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+To run tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+To run only integration tests:
+
+```bash
+npm run test:integration
+```
 
 ## Additional Resources
 
